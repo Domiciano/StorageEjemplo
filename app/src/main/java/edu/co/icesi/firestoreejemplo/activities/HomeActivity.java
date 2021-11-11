@@ -7,7 +7,9 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -27,6 +29,8 @@ public class HomeActivity extends AppCompatActivity {
     private ArrayAdapter<User> adapter;
     private Button logoutBTN;
 
+    private TextView nameTV;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +38,11 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
 
+
+
         //Load user from SP
         User loadedUser = loadUser();
-        if(loadedUser == null){
+        if(loadedUser == null || FirebaseAuth.getInstance().getCurrentUser() == null || !FirebaseAuth.getInstance().getCurrentUser().isEmailVerified()){
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             finish();
@@ -50,6 +56,7 @@ public class HomeActivity extends AppCompatActivity {
         FirebaseMessaging.getInstance().subscribeToTopic(user.getId());
 
 
+        nameTV = findViewById(R.id.nameTV);
         userListView = findViewById(R.id.userListView);
         users = new ArrayList<>();
         adapter =new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, users);
@@ -82,7 +89,16 @@ public class HomeActivity extends AppCompatActivity {
             finish();
             FirebaseMessaging.getInstance().unsubscribeFromTopic(user.getId());
             getSharedPreferences("appmoviles", MODE_PRIVATE).edit().clear().apply();
+            FirebaseAuth.getInstance().signOut();
         });
+
+        nameTV.setText(user.getName());
+        nameTV.setOnClickListener(
+                v->{
+                    Intent intent = new Intent(this, ProfileActivity.class);
+                    startActivity(intent);
+                }
+        );
 
     }
 

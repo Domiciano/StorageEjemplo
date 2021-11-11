@@ -6,9 +6,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -27,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
     private TextInputEditText usernameET;
     private TextInputEditText passET;
     private Button loginBtn;
+    private TextView noaccountTV;
+
+    private TextView forgotpassTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
         usernameET = findViewById(R.id.usernameET);
         passET = findViewById(R.id.passET);
         loginBtn = findViewById(R.id.loginBtn);
+        noaccountTV = findViewById(R.id.noaccountTV);
+        forgotpassTV = findViewById(R.id.forgotpassTV);
 
 
         loginBtn.setOnClickListener(this::login);
@@ -45,51 +53,61 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseMessaging.getInstance().subscribeToTopic("promo");
 
-    }
-
-    private void login(View view) {
-        String username = usernameET.getText().toString();
-        String pass = passET.getText().toString();
-        User user = new User(UUID.randomUUID().toString(), username, pass);
-
-        Query query = FirebaseFirestore.getInstance().collection("users").whereEqualTo("username", username);
-        query.get().addOnCompleteListener(
-                task->{
-
-                    //Si el usuario no existe crearlo e iniciar sesion con él
-                    if(task.getResult().size() == 0){
-                        FirebaseFirestore.getInstance().collection("users").document(user.getId()).set(user);
-                        Intent intent = new Intent(this, HomeActivity.class);
-                        saveUser(user);
-                        startActivity(intent);
-                    }
-
-
-
-                    //Si ya existe, descargar el usuario e iniciar sesion con el
-                    else{
-                        User existingUser = null;
-                        for(DocumentSnapshot doc : task.getResult()){
-                            existingUser = doc.toObject(User.class);
-                            break;
-                        }
-                        if(existingUser.getPassword().equals(pass)){
-                            Intent intent = new Intent(this, HomeActivity.class);
-                            saveUser(existingUser);
-                            startActivity(intent);
-                        }else{
-                            Toast.makeText(this, "Contraseña incorrecta", Toast.LENGTH_LONG).show();
-                        }
-
-                    }
-
+        noaccountTV.setOnClickListener(
+                v->{
+                    Intent intent = new Intent(this, SignupActivity.class);
+                    startActivity(intent);
                 }
         );
 
 
+        forgotpassTV.setOnClickListener(
+                v->{
+                    FirebaseAuth.getInstance().sendPasswordResetEmail(usernameET.getText().toString())
+                    .addOnSuccessListener(
+                            task->{
+                                Toast.makeText(this, "Revise el email "+usernameET.getText().toString(), Toast.LENGTH_LONG).show();
+                            }
+                    )
+                    .addOnFailureListener(
+                            error->{
+                                Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                    );
+                }
+        );
 
+    }
 
-        //
+    private void login(View view) {
+        String email = usernameET.getText().toString();
+        String pass = passET.getText().toString();
+
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, pass)
+                .addOnSuccessListener(
+                        task->{
+                            FirebaseUser fbuser = FirebaseAuth.getInstance().getCurrentUser();
+                            if(fbuser.isEmailVerified()){
+                                //Le damos acceso
+
+                                //Pedir el usuario almacenado en firestore
+                                FirebaseFirestore.getInstance().collection("users").document(fbuser.getUid()).get().addOnSuccessListener(
+                                        document->{
+                                            User user = document.toObject(User.class);
+                                            saveUser(user);
+                                            Intent intent = new Intent(this, HomeActivity.class);
+                                            startActivity(intent);
+                                        }
+                                );
+
+                            }else{
+                                Toast.makeText(this, "Su email no está verificado", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                ).addOnFailureListener(
+                    error->Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show()
+                );
+        
     }
 
     private void saveUser(User user) {
