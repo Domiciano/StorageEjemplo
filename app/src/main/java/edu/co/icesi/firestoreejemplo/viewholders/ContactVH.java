@@ -1,5 +1,6 @@
 package edu.co.icesi.firestoreejemplo.viewholders;
 
+import android.content.Context;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -39,11 +40,22 @@ public class ContactVH extends RecyclerView.ViewHolder {
         this.contact = contact;
         userNameTV.setText(contact.getName());
         userEmailTV.setText(contact.getEmail());
-        FirebaseStorage.getInstance().getReference().child("profile").child(contact.getPhotoID()).getDownloadUrl().addOnSuccessListener(
-                url->{
-                    Glide.with(userImg).load(url).into(userImg);
-                }
-        );
+        
+
+        String urlStored = userImg.getContext().getSharedPreferences("appmoviles", Context.MODE_PRIVATE).getString(contact.getPhotoID(), "");
+        if(urlStored.isEmpty() && contact.getPhotoID() != null) {
+            FirebaseStorage.getInstance().getReference().child("profile").child(contact.getPhotoID()).getDownloadUrl().addOnSuccessListener(
+                    url -> {
+                        Glide.with(userImg).load(url).into(userImg);
+                        userImg.getContext().getSharedPreferences("appmoviles", Context.MODE_PRIVATE)
+                                .edit()
+                                .putString(contact.getPhotoID(), url.toString())
+                                .apply();
+                    }
+            );
+        }else{
+            Glide.with(userImg).load(urlStored).into(userImg);
+        }
 
 
     }

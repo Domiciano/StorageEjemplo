@@ -98,20 +98,32 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void showImageFromStorage(String photoID) {
-        FirebaseStorage.getInstance().getReference().child("profile").child(photoID).getDownloadUrl().addOnSuccessListener(
-                url -> {
-                    Glide.with(this).load(url).into(profileImg);
-                }
-        );
+        String urlStored = getSharedPreferences("appmoviles", MODE_PRIVATE).getString(photoID, "");
+
+        if(urlStored.isEmpty() && photoID != null) {
+            FirebaseStorage.getInstance().getReference().child("profile").child(photoID).getDownloadUrl().addOnSuccessListener(
+                    url -> {
+                        Glide.with(this).load(url).into(profileImg);
+                        getSharedPreferences("appmoviles", MODE_PRIVATE)
+                                .edit()
+                                .putString(photoID, url.toString())
+                                .apply();
+                    }
+            );
+        }else{
+            Glide.with(this).load(urlStored).into(profileImg);
+        }
     }
 
     private void onGalleryResult(ActivityResult result) {
-        Uri uri = result.getData().getData();
-        profileImg.setImageURI(uri);
-        //Upload
-        String photoID = UUID.randomUUID().toString();
-        FirebaseStorage.getInstance().getReference().child("profile").child(photoID).putFile(uri);
-        FirebaseFirestore.getInstance().collection("users").document(user.getId()).update("photoID", photoID);
+        if(result.getResultCode() == RESULT_OK) {
+            Uri uri = result.getData().getData();
+            profileImg.setImageURI(uri);
+            //Upload
+            String photoID = UUID.randomUUID().toString();
+            FirebaseStorage.getInstance().getReference().child("profile").child(photoID).putFile(uri);
+            FirebaseFirestore.getInstance().collection("users").document(user.getId()).update("photoID", photoID);
+        }
     }
 
     private void changePassword() {
