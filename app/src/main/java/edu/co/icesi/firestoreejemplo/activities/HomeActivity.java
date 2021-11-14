@@ -3,6 +3,7 @@ package edu.co.icesi.firestoreejemplo.activities;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,6 +30,8 @@ public class HomeActivity extends AppCompatActivity {
 
     private TextView nameTV;
 
+    private SwipeRefreshLayout contactsSRL;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +56,22 @@ public class HomeActivity extends AppCompatActivity {
 
         FirebaseMessaging.getInstance().subscribeToTopic(user.getId());
 
+
+        contactsSRL = findViewById(R.id.contactsSRL);
+        contactsSRL.setOnRefreshListener(
+                ()->{
+                    FirebaseFirestore.getInstance().collection("users").get().addOnCompleteListener(
+                            task ->{
+                                adapter.clear();
+                                for(DocumentSnapshot doc : task.getResult()){
+                                    User user = doc.toObject(User.class);
+                                    adapter.addUser(user);
+                                }
+                                contactsSRL.setRefreshing(false);
+                            }
+                    );
+                }
+        );
 
         nameTV = findViewById(R.id.nameTV);
 

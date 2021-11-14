@@ -45,4 +45,10 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactVH> {
         users.add(user);
         notifyItemInserted(users.size()-1);
     }
+
+    public void clear() {
+        int count = users.size();
+        users.clear();
+        notifyItemRangeRemoved(0, count);
+    }
 }
