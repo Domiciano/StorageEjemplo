@@ -9,6 +9,7 @@ public class User implements Serializable {
     private String id;
     private String name;
     private String email;
+    private String photoID;
 
     public User() {
     }
@@ -41,6 +42,14 @@ public class User implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhotoID() {
+        return photoID;
+    }
+
+    public void setPhotoID(String photoID) {
+        this.photoID = photoID;
     }
 
     @Override

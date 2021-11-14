@@ -1,12 +1,12 @@
 package edu.co.icesi.firestoreejemplo.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -15,18 +15,16 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 
-import java.util.ArrayList;
-
 import edu.co.icesi.firestoreejemplo.R;
+import edu.co.icesi.firestoreejemplo.adapters.ContactAdapter;
 import edu.co.icesi.firestoreejemplo.models.User;
 
 public class HomeActivity extends AppCompatActivity {
 
     private User user;
 
-    private ListView userListView;
-    private ArrayList<User> users;
-    private ArrayAdapter<User> adapter;
+    private RecyclerView userListView;
+    private ContactAdapter adapter;
     private Button logoutBTN;
 
     private TextView nameTV;
@@ -57,10 +55,12 @@ public class HomeActivity extends AppCompatActivity {
 
 
         nameTV = findViewById(R.id.nameTV);
+
         userListView = findViewById(R.id.userListView);
-        users = new ArrayList<>();
-        adapter =new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, users);
+        adapter = new ContactAdapter();
         userListView.setAdapter(adapter);
+        userListView.setLayoutManager(new LinearLayoutManager(this));
+        userListView.setHasFixedSize(true);
 
         logoutBTN = findViewById(R.id.logoutBTN);
 
@@ -69,12 +69,13 @@ public class HomeActivity extends AppCompatActivity {
                 task ->{
                     for(DocumentSnapshot doc : task.getResult()){
                         User user = doc.toObject(User.class);
-                        users.add(user);
-                        adapter.notifyDataSetChanged();
+                        adapter.addUser(user);
                     }
                 }
         );
 
+
+        /*
         userListView.setOnItemClickListener((parent, view, position, id) -> {
             User contact = users.get(position);
             Intent intent = new Intent(this, ChatActivity.class);
@@ -82,6 +83,8 @@ public class HomeActivity extends AppCompatActivity {
             intent.putExtra("contact", contact);
             startActivity(intent);
         });
+        */
+
 
         logoutBTN.setOnClickListener(v->{
             Intent intent = new Intent(this, MainActivity.class);

@@ -11,34 +11,38 @@ import java.util.ArrayList;
 
 import edu.co.icesi.firestoreejemplo.R;
 import edu.co.icesi.firestoreejemplo.models.User;
-import edu.co.icesi.firestoreejemplo.viewholders.UserVH;
+import edu.co.icesi.firestoreejemplo.viewholders.ContactVH;
 
-public class UserAdapter extends RecyclerView.Adapter<UserVH> {
+public class ContactAdapter extends RecyclerView.Adapter<ContactVH> {
 
     private ArrayList<User> users;
 
-    public UserAdapter(){
+    public ContactAdapter(){
         users = new ArrayList<>();
     }
 
     @NonNull
     @Override
-    public UserVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ContactVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View root = inflater.inflate(R.layout.userrow, parent, false);
-        UserVH userVH = new UserVH(root);
-        return userVH;
+        View root = inflater.inflate(R.layout.contactsrow, parent, false);
+        ContactVH contactVH = new ContactVH(root);
+        return contactVH;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull UserVH holder, int position) {
+    public void onBindViewHolder(@NonNull ContactVH holder, int position) {
         User user = users.get(position);
-        holder.getUserNameTV().setText(user.getName());
-        holder.getUserEmailTV().setText(user.getEmail());
+        holder.setContact(user);
     }
 
     @Override
     public int getItemCount() {
         return users.size();
+    }
+
+    public void addUser(User user) {
+        users.add(user);
+        notifyItemInserted(users.size()-1);
     }
 }
